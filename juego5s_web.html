@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Juego 5S — Horse Argentina</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --orange:#FE6300;--dark:#29343D;--white:#fff;
+  --s1:#2563EB;--s1b:#DBEAFE;--s1t:#1E3A5F;
+  --s2:#16A34A;--s2b:#DCFCE7;--s2t:#14532D;
+  --s3:#D97706;--s3b:#FEF3C7;--s3t:#78350F;
+  --s4:#7C3AED;--s4b:#F3E8FF;--s4t:#3B0764;
+  --s5:#DC2626;--s5b:#FEE2E2;--s5t:#7F1D1D;
+  --gray:#657E8E;--grayxs:#F3F4F6;--graylt:#E5E7EB;
+}
+body{font-family:Arial,sans-serif;background:#F6F6F6;min-height:100vh}
+.screen{display:none;flex-direction:column;min-height:100vh}
+.screen.active{display:flex}
+
+/* ── HEADER ── */
+.hdr{background:var(--dark);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.hdr-badge{background:var(--orange);border-radius:8px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;line-height:1.2;text-align:center;flex-shrink:0}
+.hdr-title{color:#fff;font-size:14px;font-weight:700}
+.hdr-sub{color:#A8B4BE;font-size:10px;margin-top:1px}
+.strip{background:var(--orange);text-align:center;padding:7px 12px;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.content{flex:1;padding:12px}
+
+/* ── PANTALLA BIENVENIDA ── */
+.welcome-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;gap:20px}
+.big-badge{background:var(--orange);border-radius:16px;width:80px;height:80px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;line-height:1.2;text-align:center}
+.welcome-title{font-size:22px;font-weight:700;color:var(--dark);text-align:center}
+.welcome-sub{font-size:13px;color:var(--gray);text-align:center;line-height:1.6}
+.name-input-wrap{width:100%;max-width:320px}
+.name-input-wrap label{display:block;font-size:12px;font-weight:700;color:var(--gray);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.name-input-wrap input{width:100%;padding:14px 16px;font-size:16px;border:2px solid var(--graylt);border-radius:12px;background:#fff;color:var(--dark);outline:none;transition:border-color .2s}
+.name-input-wrap input:focus{border-color:var(--orange)}
+.btn-start{width:100%;max-width:320px;padding:16px;background:var(--orange);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn-start:active{opacity:.85}
+.btn-start:disabled{opacity:.4;cursor:default}
+.acts-preview{width:100%;max-width:320px;display:flex;flex-direction:column;gap:8px}
+.act-pill{display:flex;align-items:center;gap:10px;background:#fff;border-radius:10px;padding:10px 12px;border:0.5px solid var(--graylt)}
+.act-pill-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.act-pill-txt{font-size:12px;font-weight:700;color:var(--dark)}
+.act-pill-sub{font-size:10px;color:var(--gray)}
+
+/* ── PROGRESO ── */
+.progress-wrap{padding:10px 14px 0;background:#fff;border-bottom:0.5px solid var(--graylt);flex-shrink:0}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--gray);margin-bottom:5px}
+.progress-bar{height:5px;background:var(--graylt);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:var(--orange);border-radius:3px;transition:width .4s}
+
+/* ── ACTIVIDAD HEADER ── */
+.act-hdr{border-radius:10px 10px 0 0;padding:10px 14px 8px;margin-bottom:0}
+.act-hdr-num{font-size:10px;font-weight:700;opacity:.85}
+.act-hdr-title{font-size:15px;font-weight:700;margin-top:2px}
+.act-hdr-inst{font-size:11px;opacity:.8;margin-top:2px;line-height:1.4}
+
+/* ── ACTIVIDAD 1: CORRECTO/INCORRECTO ── */
+.ci-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:10px 0}
+.ci-card{background:#fff;border-radius:10px;border:1.5px solid var(--graylt);overflow:hidden;cursor:pointer;transition:transform .1s}
+.ci-card:active{transform:scale(.97)}
+.ci-card.answered{cursor:default}
+.ci-img{padding:16px 12px 8px;text-align:center;font-size:34px}
+.ci-lbl{font-size:11px;font-weight:700;text-align:center;padding:0 8px 10px;color:var(--dark);line-height:1.3}
+.ci-btns{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:0.5px solid var(--graylt)}
+.ci-btn{padding:9px 4px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;transition:background .15s}
+.ci-btn.ok{color:var(--s2t);background:var(--s2b)}
+.ci-btn.nok{color:var(--s5t);background:var(--s5b)}
+.ci-btn.selected-ok{background:#16A34A;color:#fff}
+.ci-btn.selected-nok{background:#DC2626;color:#fff}
+.ci-btn.wrong{background:#fecaca;color:#7f1d1d;text-decoration:line-through}
+.ci-reveal{padding:8px 10px;font-size:10px;line-height:1.4;border-top:0.5px solid var(--graylt);display:none}
+.ci-card.answered .ci-reveal{display:block}
+.ci-s-tag{display:inline-block;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;margin-top:3px}
+
+/* ── ACTIVIDAD 2: UNIR ── */
+.match-wrap{padding:8px 0}
+.match-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.match-sit{flex:1;background:#fff;border-radius:10px;padding:10px 10px;border:1.5px solid var(--graylt);display:flex;align-items:center;gap:8px;cursor:pointer;transition:all .15s;min-height:52px}
+.match-sit.sel{border-color:var(--orange);background:#FFF7F0}
+.match-sit.done{opacity:.6;cursor:default}
+.match-sit-emoji{font-size:20px;flex-shrink:0}
+.match-sit-txt{font-size:11px;font-weight:700;color:var(--dark);line-height:1.3}
+.match-arrow{font-size:16px;color:var(--gray);flex-shrink:0}
+.match-arrow.ok{color:var(--s2)}
+.match-s-col{display:flex;flex-direction:column;gap:6px}
+.match-s{border-radius:10px;padding:11px 14px;text-align:center;cursor:pointer;transition:all .15s;border:1.5px solid transparent}
+.match-s:active{transform:scale(.96)}
+.match-s-code{font-size:15px;font-weight:700;color:#fff}
+.match-s-name{font-size:9px;color:rgba(255,255,255,.85);margin-top:1px}
+.match-s.done{opacity:.45;cursor:default}
+.match-result{border-radius:10px;padding:12px 14px;font-size:12px;font-weight:700;text-align:center;margin-top:8px;display:none}
+
+/* ── ACTIVIDAD 3: DEFECTOS ── */
+.def-intro{background:#fff;border-radius:10px;padding:12px;border:0.5px solid var(--graylt);margin-bottom:10px}
+.def-score-big{text-align:center;font-size:28px;font-weight:700;color:var(--dark);margin:4px 0}
+.def-score-sub{text-align:center;font-size:11px;color:var(--gray)}
+.def-zones{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.def-zone{background:#fff;border-radius:10px;padding:12px 10px;border:1.5px solid var(--graylt);text-align:center;cursor:pointer;transition:all .2s;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.def-zone:active{transform:scale(.96)}
+.def-zone-emoji{font-size:28px}
+.def-zone-lbl{font-size:10px;font-weight:700;color:var(--dark);line-height:1.3}
+.def-zone.found-bad{background:var(--s5b);border-color:var(--s5);cursor:default}
+.def-zone.found-ok{background:var(--s2b);border-color:var(--s2);cursor:default}
+.def-zone.found-bad .def-zone-lbl{color:var(--s5t)}
+.def-s-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:2px}
+.def-feedback{font-size:10px;padding:8px 12px;border-radius:8px;margin-top:10px;display:none}
+
+/* ── ACTIVIDAD 4: MEMORY ── */
+.mem-intro{font-size:12px;color:var(--gray);margin-bottom:10px;text-align:center;line-height:1.5}
+.mem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.mem-card{aspect-ratio:1;border-radius:10px;border:1.5px solid var(--graylt);cursor:pointer;position:relative;overflow:hidden;transition:transform .15s}
+.mem-card:active{transform:scale(.93)}
+.mem-card-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;transition:opacity .25s}
+.mem-front{background:var(--grayxs)}
+.mem-back{opacity:0}
+.mem-card.flipped .mem-front{opacity:0}
+.mem-card.flipped .mem-back{opacity:1}
+.mem-emoji{font-size:20px}
+.mem-qlbl{font-size:8px;text-align:center;margin-top:2px;line-height:1.2;font-weight:700;color:var(--gray)}
+.mem-s{font-size:16px;font-weight:700;text-align:center}
+.mem-sname{font-size:7px;text-align:center;margin-top:1px;font-weight:700;opacity:.85}
+.mem-status{text-align:center;padding:10px;font-size:12px;color:var(--gray);margin-top:8px}
+
+/* ── BOTÓN SIGUIENTE ── */
+.btn-next{width:100%;padding:15px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:14px;transition:opacity .15s}
+.btn-next:active{opacity:.85}
+.btn-next:disabled{opacity:.3;cursor:default}
+
+/* ── RESULTADO FINAL ── */
+.result-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;gap:16px;text-align:center}
+.result-badge{width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0}
+.result-name{font-size:20px;font-weight:700;color:var(--dark)}
+.result-nivel{font-size:14px;font-weight:700;margin-top:-4px}
+.result-score-wrap{background:#fff;border-radius:16px;padding:18px 24px;border:0.5px solid var(--graylt);width:100%;max-width:300px}
+.result-score-num{font-size:44px;font-weight:700;color:var(--orange)}
+.result-score-label{font-size:12px;color:var(--gray);margin-top:-2px}
+.result-breakdown{width:100%;max-width:300px;display:flex;flex-direction:column;gap:6px}
+.result-row{display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:10px;padding:10px 14px;border:0.5px solid var(--graylt)}
+.result-row-s{font-size:12px;font-weight:700}
+.result-row-pts{font-size:14px;font-weight:700;color:var(--orange)}
+.result-msg{font-size:13px;color:var(--gray);line-height:1.6;max-width:300px}
+.btn-reiniciar{padding:14px 28px;background:var(--orange);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
+
+/* ── REGISTRO FINAL ── */
+.registro-card{background:#fff;border-radius:14px;padding:16px;border:0.5px solid var(--graylt);width:100%;max-width:320px;text-align:left}
+.registro-title{font-size:11px;font-weight:700;color:var(--gray);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px}
+.registro-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:0.5px solid var(--graylt)}
+.registro-row:last-child{border-bottom:none}
+.registro-key{color:var(--gray)}
+.registro-val{font-weight:700;color:var(--dark)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ PANTALLA 0: BIENVENIDA ═══════════════════════ -->
+<div class="screen active" id="s-welcome">
+  <div class="hdr">
+    <div class="hdr-badge">5S</div>
+    <div>
+      <div class="hdr-title">Juego 5S</div>
+      <div class="hdr-sub">Horse Argentina · Semana Q</div>
+    </div>
+  </div>
+  <div class="welcome-body">
+    <div class="big-badge">5S</div>
+    <div class="welcome-title">¿Cuánto sabés de las 5S?</div>
+    <div class="welcome-sub">4 actividades · 5 a 10 minutos · Ponés a prueba lo que aprendiste en el panel</div>
+    <div class="name-input-wrap">
+      <label for="nombre-input">Tu nombre</label>
+      <input id="nombre-input" type="text" placeholder="Escribí tu nombre..." autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="acts-preview">
+      <div class="act-pill"><div class="act-pill-num" style="background:#2563EB">1</div><div><div class="act-pill-txt">Correcto o Incorrecto</div><div class="act-pill-sub">8 situaciones de planta · Marcá y explicá</div></div></div>
+      <div class="act-pill"><div class="act-pill-num" style="background:#16A34A">2</div><div><div class="act-pill-txt">Uní con flechas</div><div class="act-pill-sub">5 situaciones · Relacionalas con su S</div></div></div>
+      <div class="act-pill"><div class="act-pill-num" style="background:#D97706">3</div><div><div class="act-pill-txt">Encontrá los defectos</div><div class="act-pill-sub">7 problemas 5S ocultos en el puesto</div></div></div>
+      <div class="act-pill"><div class="act-pill-num" style="background:#7C3AED">4</div><div><div class="act-pill-txt">Memory 5S</div><div class="act-pill-sub">10 tarjetas · Cada S su situación</div></div></div>
+    </div>
+    <button class="btn-start" id="btn-start" disabled onclick="startGame()">Empezar el juego</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PANTALLA 1: CORRECTO/INCORRECTO ═══════════════ -->
+<div class="screen" id="s-act1">
+  <div class="hdr"><div class="hdr-badge">5S</div><div><div class="hdr-title" id="hdr-name-1"></div><div class="hdr-sub">Actividad 1 de 4</div></div></div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Progreso</span><span id="prog-1">0/8</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="pbar-1" style="width:0%"></div></div>
+  </div>
+  <div class="content">
+    <div class="act-hdr" style="background:#2563EB;border-radius:10px;margin-bottom:10px">
+      <div class="act-hdr-num" style="color:rgba(255,255,255,.8)">ACTIVIDAD 1 · CORRECTO O INCORRECTO</div>
+      <div class="act-hdr-title" style="color:#fff">¿Está bien o mal?</div>
+      <div class="act-hdr-inst" style="color:rgba(255,255,255,.85)">Tocá cada tarjeta, marcá si la situación es CORRECTA o INCORRECTA, y a qué S pertenece</div>
+    </div>
+    <div class="ci-grid" id="ci-grid"></div>
+    <button class="btn-next" id="btn-next-1" disabled onclick="goAct(2)">Siguiente actividad →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PANTALLA 2: UNIR ═══════════════════════════ -->
+<div class="screen" id="s-act2">
+  <div class="hdr"><div class="hdr-badge">5S</div><div><div class="hdr-title" id="hdr-name-2"></div><div class="hdr-sub">Actividad 2 de 4</div></div></div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Progreso</span><span id="prog-2">0/5</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="pbar-2" style="width:0%"></div></div>
+  </div>
+  <div class="content">
+    <div class="act-hdr" style="background:#16A34A;border-radius:10px;margin-bottom:10px">
+      <div class="act-hdr-num" style="color:rgba(255,255,255,.8)">ACTIVIDAD 2 · UNÍ CON FLECHAS</div>
+      <div class="act-hdr-title" style="color:#fff">¿Qué S es cada una?</div>
+      <div class="act-hdr-inst" style="color:rgba(255,255,255,.85)">Tocá una situación (izquierda), luego tocá la S que le corresponde (derecha)</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-start">
+      <div id="match-left" style="flex:1;display:flex;flex-direction:column;gap:7px"></div>
+      <div id="match-right" style="width:90px;flex-shrink:0;display:flex;flex-direction:column;gap:7px"></div>
+    </div>
+    <div id="match-result" class="match-result"></div>
+    <button class="btn-next" id="btn-next-2" disabled onclick="goAct(3)">Siguiente actividad →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PANTALLA 3: DEFECTOS ═══════════════════════ -->
+<div class="screen" id="s-act3">
+  <div class="hdr"><div class="hdr-badge">5S</div><div><div class="hdr-title" id="hdr-name-3"></div><div class="hdr-sub">Actividad 3 de 4</div></div></div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Defectos encontrados</span><span id="prog-3">0/7</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="pbar-3" style="width:0%"></div></div>
+  </div>
+  <div class="content">
+    <div class="act-hdr" style="background:#D97706;border-radius:10px;margin-bottom:10px">
+      <div class="act-hdr-num" style="color:rgba(255,255,255,.8)">ACTIVIDAD 3 · ENCONTRÁ LOS DEFECTOS</div>
+      <div class="act-hdr-title" style="color:#fff">7 problemas ocultos</div>
+      <div class="act-hdr-inst" style="color:rgba(255,255,255,.85)">Este puesto tiene 7 problemas 5S. Tocá cada zona para descubrirlos</div>
+    </div>
+    <div class="def-intro">
+      <div class="def-score-big" id="def-found">0</div>
+      <div class="def-score-sub">de 7 defectos encontrados</div>
+    </div>
+    <div class="def-zones" id="def-zones"></div>
+    <div id="def-feedback" class="def-feedback"></div>
+    <button class="btn-next" id="btn-next-3" disabled onclick="goAct(4)">Siguiente actividad →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PANTALLA 4: MEMORY ═══════════════════════════ -->
+<div class="screen" id="s-act4">
+  <div class="hdr"><div class="hdr-badge">5S</div><div><div class="hdr-title" id="hdr-name-4"></div><div class="hdr-sub">Actividad 4 de 4</div></div></div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Reveladas</span><span id="prog-4">0/10</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="pbar-4" style="width:0%"></div></div>
+  </div>
+  <div class="content">
+    <div class="act-hdr" style="background:#7C3AED;border-radius:10px;margin-bottom:10px">
+      <div class="act-hdr-num" style="color:rgba(255,255,255,.8)">ACTIVIDAD 4 · MEMORY 5S</div>
+      <div class="act-hdr-title" style="color:#fff">¿A qué S pertenece?</div>
+      <div class="act-hdr-inst" style="color:rgba(255,255,255,.85)">Tocá cada tarjeta para ver a qué S corresponde la situación</div>
+    </div>
+    <div class="mem-grid" id="mem-grid"></div>
+    <div class="mem-status" id="mem-status">Tocá las tarjetas para descubrir su S</div>
+    <button class="btn-next" id="btn-next-4" disabled onclick="showResult()">Ver mi resultado →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PANTALLA 5: RESULTADO ═══════════════════════ -->
+<div class="screen" id="s-result">
+  <div class="hdr"><div class="hdr-badge">5S</div><div><div class="hdr-title">Resultado final</div><div class="hdr-sub">Horse Argentina · Semana Q</div></div></div>
+  <div class="result-body">
+    <div class="result-badge" id="res-badge"></div>
+    <div class="result-name" id="res-name"></div>
+    <div class="result-nivel" id="res-nivel"></div>
+    <div class="result-score-wrap">
+      <div class="result-score-num" id="res-score"></div>
+      <div class="result-score-label">puntos sobre 26 posibles</div>
+    </div>
+    <div class="result-breakdown" id="res-breakdown"></div>
+    <div class="result-msg" id="res-msg"></div>
+    <div class="registro-card" id="res-registro">
+      <div class="registro-title">Registro de participación</div>
+      <div id="res-reg-rows"></div>
+    </div>
+    <button class="btn-reiniciar" onclick="reiniciar()">Jugar de nuevo</button>
+  </div>
+</div>
+
+<script>
+const SC={s1:"#2563EB",s1b:"#DBEAFE",s1t:"#1E3A5F",s2:"#16A34A",s2b:"#DCFCE7",s2t:"#14532D",s3:"#D97706",s3b:"#FEF3C7",s3t:"#78350F",s4:"#7C3AED",s4b:"#F3E8FF",s4t:"#3B0764",s5:"#DC2626",s5b:"#FEE2E2",s5t:"#7F1D1D"};
+let userName="",score={a1:0,a2:0,a3:0,a4:0};
+
+document.getElementById("nombre-input").addEventListener("input",function(){
+  document.getElementById("btn-start").disabled=this.value.trim().length<2;
+});
+document.getElementById("nombre-input").addEventListener("keydown",function(e){
+  if(e.key==="Enter"&&this.value.trim().length>=2)startGame();
+});
+
+function startGame(){
+  userName=document.getElementById("nombre-input").value.trim();
+  if(!userName)return;
+  ["1","2","3","4"].forEach(n=>document.getElementById("hdr-name-"+n).textContent=userName);
+  buildAct1();buildAct2();buildAct3();buildAct4();
+  goScreen("s-act1");
+}
+function goScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+function goAct(n){goScreen("s-act"+n);}
+
+/* ─── ACTIVIDAD 1 ─── */
+const CI=[
+  {emoji:"🔧",lbl:"Herramienta rota sin fecha de retiro",ok:false,s:"1S",sc:SC.s1,sb:SC.s1b,st:SC.s1t,why:"Elemento en mal estado sin acción definida → innecesario. Debe retirarse (1S)."},
+  {emoji:"📐",lbl:"Cada herramienta tiene su lugar señalizado",ok:true,s:"2S",sc:SC.s2,sb:SC.s2b,st:SC.s2t,why:"Correcto: lugar fijo y señalizado para cada cosa (2S Seiton)."},
+  {emoji:"🚧",lbl:"Pasillo bloqueado con materiales",ok:false,s:"2S",sc:SC.s2,sb:SC.s2b,st:SC.s2t,why:"El pasillo debe estar completamente libre, siempre (2S)."},
+  {emoji:"🧹",lbl:"Limpieza al cierre del turno con registro",ok:true,s:"3S",sc:SC.s3,sb:SC.s3b,st:SC.s3t,why:"Correcto: rutina documentada de limpieza es parte de 3S Seiso."},
+  {emoji:"📋",lbl:"Estándar visual no está visible en el área",ok:false,s:"4S",sc:SC.s4,sb:SC.s4b,st:SC.s4t,why:"El estándar debe estar físicamente visible en el puesto (4S)."},
+  {emoji:"🦺",lbl:"EPP correcto y en uso durante la operación",ok:true,s:"4S",sc:SC.s4,sb:SC.s4b,st:SC.s4t,why:"Correcto: EPP correcto y en uso es parte del estándar 4S."},
+  {emoji:"📦",lbl:"Caja sin identificación en zona de trabajo",ok:false,s:"1S",sc:SC.s1,sb:SC.s1b,st:SC.s1t,why:"Material sin identificación es un innecesario potencial (1S)."},
+  {emoji:"💡",lbl:"Operario detecta y reporta anomalía al limpiar",ok:true,s:"3S",sc:SC.s3,sb:SC.s3b,st:SC.s3t,why:"Correcto: detectar y reportar al limpiar es exactamente Seiso activo (3S)."},
+];
+let ci_done=0;
+function buildAct1(){
+  const g=document.getElementById("ci-grid");g.innerHTML="";ci_done=0;
+  CI.forEach((item,i)=>{
+    const d=document.createElement("div");d.className="ci-card";
+    d.innerHTML=`<div class="ci-img">${item.emoji}</div>
+<div class="ci-lbl">${item.lbl}</div>
+<div class="ci-btns">
+  <div class="ci-btn ok" onclick="ansCI(${i},true)">✓ CORRECTO</div>
+  <div class="ci-btn nok" onclick="ansCI(${i},false)">✗ INCORRECTO</div>
+</div>
+<div class="ci-reveal" id="ci-rev-${i}" style="background:${item.ok?"#F0FDF4":"#FFF2F2"};color:${item.ok?SC.s2t:SC.s5t}">
+  ${item.ok?"✅":"❌"} ${item.why}<br>
+  <span class="ci-s-tag" style="background:${item.sc};color:#fff">${item.s}</span>
+</div>`;
+    g.appendChild(d);
+  });
+}
+function ansCI(i,userOk){
+  const cards=document.querySelectorAll(".ci-card");
+  const card=cards[i];
+  if(card.classList.contains("answered"))return;
+  card.classList.add("answered");
+  const btns=card.querySelectorAll(".ci-btn");
+  const correct=CI[i].ok===userOk;
+  if(correct){score.a1++;btns[userOk?0:1].className="ci-btn selected-ok";}
+  else{btns[userOk?0:1].className="ci-btn "+(userOk?"selected-ok":"selected-nok");btns[CI[i].ok?0:1].className="ci-btn "+(CI[i].ok?"selected-ok":"selected-nok");}
+  ci_done++;
+  const pct=Math.round(ci_done/8*100);
+  document.getElementById("prog-1").textContent=ci_done+"/8";
+  document.getElementById("pbar-1").style.width=pct+"%";
+  if(ci_done===8)document.getElementById("btn-next-1").disabled=false;
+}
+
+/* ─── ACTIVIDAD 2 ─── */
+const MATCH=[
+  {emoji:"🗑️",txt:"Separo todo lo que no usé esta semana",s:"1S",sc:SC.s1,sb:SC.s1b,st:SC.s1t},
+  {emoji:"📌",txt:"Señalizo lugar de cada herramienta",s:"2S",sc:SC.s2,sb:SC.s2b,st:SC.s2t},
+  {emoji:"🔍",txt:"Limpio y busco anomalías activamente",s:"3S",sc:SC.s3,sb:SC.s3b,st:SC.s3t},
+  {emoji:"📸",txt:"La foto del puesto visible en el área",s:"4S",sc:SC.s4,sb:SC.s4b,st:SC.s4t},
+  {emoji:"📆",txt:"Hago 5S todos los días sin que me lo pidan",s:"5S",sc:SC.s5,sb:SC.s5b,st:SC.s5t},
+];
+const SMIX=["3S","1S","5S","2S","4S"];
+let selMatch=null,matchDone=0;
+function buildAct2(){
+  const L=document.getElementById("match-left"),R=document.getElementById("match-right");
+  L.innerHTML="";R.innerHTML="";selMatch=null;matchDone=0;
+  MATCH.forEach((m,i)=>{
+    const d=document.createElement("div");d.className="match-sit";d.dataset.idx=i;
+    d.innerHTML=`<span class="match-sit-emoji">${m.emoji}</span><span class="match-sit-txt">${m.txt}</span>`;
+    d.onclick=()=>selectSit(i,d);L.appendChild(d);
+  });
+  SMIX.forEach(s=>{
+    const m=MATCH.find(x=>x.s===s);
+    const d=document.createElement("div");d.className="match-s";
+    d.style.background=m.sc;d.dataset.s=s;
+    d.innerHTML=`<div class="match-s-code">${s}</div><div class="match-s-name">${{
+      "1S":"SEIRI","2S":"SEITON","3S":"SEISO","4S":"SEIKETSU","5S":"SHITSUKE"}[s]}</div>`;
+    d.onclick=()=>selectS(s,d);R.appendChild(d);
+  });
+}
+function selectSit(i,el){
+  if(el.classList.contains("done"))return;
+  selMatch=i;
+  document.querySelectorAll(".match-sit").forEach(e=>e.classList.remove("sel"));
+  el.classList.add("sel");
+}
+function selectS(s,el){
+  if(selMatch===null||el.classList.contains("done"))return;
+  const correct=MATCH[selMatch].s===s;
+  const sitEls=document.querySelectorAll(".match-sit");
+  if(correct){
+    score.a2++;matchDone++;
+    sitEls[selMatch].classList.add("done");sitEls[selMatch].classList.remove("sel");
+    sitEls[selMatch].style.borderColor=MATCH[selMatch].sc;
+    sitEls[selMatch].style.background=MATCH[selMatch].sb;
+    el.classList.add("done");
+    const p=document.getElementById("prog-2");p.textContent=matchDone+"/5";
+    document.getElementById("pbar-2").style.width=Math.round(matchDone/5*100)+"%";
+    if(matchDone===5){
+      document.getElementById("btn-next-2").disabled=false;
+      const r=document.getElementById("match-result");
+      r.style.display="block";r.style.background="#DCFCE7";r.style.color="#14532D";
+      r.textContent="¡Perfecto! Uniste las 5 situaciones con su S correcta.";
+    }
+  } else {
+    el.style.background="#FEE2E2";
+    setTimeout(()=>{if(!el.classList.contains("done"))el.style.background=MATCH.find(x=>x.s===s).sc;},500);
+  }
+  selMatch=null;
+  document.querySelectorAll(".match-sit").forEach(e=>e.classList.remove("sel"));
+}
+
+/* ─── ACTIVIDAD 3 ─── */
+const ZONES=[
+  {emoji:"🔧",lbl:"Llave rota\nsin retiro",bad:true,s:"1S",sc:SC.s1,why:"Herramienta en mal estado sin acción → innecesario (1S)"},
+  {emoji:"📦",lbl:"Caja vacía\nsin ID",bad:true,s:"1S",sc:SC.s1,why:"Material sin identificación → revisar y retirar (1S)"},
+  {emoji:"🏭",lbl:"Máquina\nen operación",bad:false},
+  {emoji:"💧",lbl:"Pérdida de\naceite",bad:true,s:"3S",sc:SC.s3,why:"Pérdida detectada al limpiar → reportar inmediato (3S)"},
+  {emoji:"📋",lbl:"Sin estándar\nvisible",bad:true,s:"4S",sc:SC.s4,why:"Estándar no visible en el área (4S Seiketsu)"},
+  {emoji:"🦺",lbl:"EPP en\nsu lugar",bad:false},
+  {emoji:"🚧",lbl:"Pasillo\nbloqueado",bad:true,s:"2S",sc:SC.s2,why:"Pasillo obstruido → liberar siempre (2S)"},
+  {emoji:"♻️",lbl:"Residuos\nmezclados",bad:true,s:"1S",sc:SC.s1,why:"Residuos deben separarse por tipo (1S)"},
+  {emoji:"✅",lbl:"Puesto\nlimpio",bad:false},
+  {emoji:"🚫",lbl:"Extintor\ntapado",bad:true,s:"2S",sc:SC.s2,why:"Extintor debe ser accesible en todo momento (2S)"},
+  {emoji:"🧹",lbl:"Limpieza\nal día",bad:false},
+  {emoji:"⚠️",lbl:"Derrame\nsin limpiar",bad:true,s:"3S",sc:SC.s3,why:"Derrame visible → limpiar y reportar (3S)"},
+];
+let defFound=0;
+function buildAct3(){
+  const g=document.getElementById("def-zones");g.innerHTML="";defFound=0;
+  document.getElementById("def-found").textContent="0";
+  ZONES.forEach((z,i)=>{
+    const d=document.createElement("div");d.className="def-zone";
+    d.innerHTML=`<div class="def-zone-emoji">${z.emoji}</div><div class="def-zone-lbl">${z.lbl.replace("\n","<br>")}</div>`;
+    d.onclick=()=>tapZone(i,d,z);
+    g.appendChild(d);
+  });
+}
+function tapZone(i,el,z){
+  if(el.classList.contains("found-bad")||el.classList.contains("found-ok"))return;
+  if(z.bad){
+    score.a3++;defFound++;
+    el.classList.add("found-bad");
+    el.innerHTML+=`<span class="def-s-tag" style="background:${z.sc};color:#fff">${z.s}</span>`;
+    const fb=document.getElementById("def-feedback");
+    fb.style.display="block";fb.style.background=z.sc+"22";fb.style.color=z.sc;
+    fb.style.border="0.5px solid "+z.sc;
+    fb.innerHTML=`<b>Defecto ${defFound}/7 encontrado:</b> ${z.why}`;
+    document.getElementById("def-found").textContent=defFound;
+    document.getElementById("prog-3").textContent=defFound+"/7";
+    document.getElementById("pbar-3").style.width=Math.round(defFound/7*100)+"%";
+    if(defFound===7)document.getElementById("btn-next-3").disabled=false;
+  } else {
+    el.classList.add("found-ok");
+    el.style.borderColor="#16A34A";
+    setTimeout(()=>{el.classList.remove("found-ok");el.style.borderColor="";},600);
+  }
+}
+
+/* ─── ACTIVIDAD 4 ─── */
+const MEM=[
+  {emoji:"🗑️",lbl:"Separo lo que no uso",s:"1S",sc:SC.s1,sb:SC.s1b,st:SC.s1t},
+  {emoji:"📐",lbl:"Señalizo lugar de todo",s:"2S",sc:SC.s2,sb:SC.s2b,st:SC.s2t},
+  {emoji:"🧹",lbl:"Limpio y detecto",s:"3S",sc:SC.s3,sb:SC.s3b,st:SC.s3t},
+  {emoji:"📋",lbl:"Estándar visible",s:"4S",sc:SC.s4,sb:SC.s4b,st:SC.s4t},
+  {emoji:"🔄",lbl:"Lo hago sin que me pidan",s:"5S",sc:SC.s5,sb:SC.s5b,st:SC.s5t},
+  {emoji:"♻️",lbl:"Residuos en contenedor correcto",s:"1S",sc:SC.s1,sb:SC.s1b,st:SC.s1t},
+  {emoji:"🏷️",lbl:"Etiqueta en cada herramienta",s:"2S",sc:SC.s2,sb:SC.s2b,st:SC.s2t},
+  {emoji:"💧",lbl:"Detecto pérdida al limpiar",s:"3S",sc:SC.s3,sb:SC.s3b,st:SC.s3t},
+  {emoji:"📸",lbl:"Foto del puesto al día",s:"4S",sc:SC.s4,sb:SC.s4b,st:SC.s4t},
+  {emoji:"💬",lbl:"Propongo mejoras",s:"5S",sc:SC.s5,sb:SC.s5b,st:SC.s5t},
+];
+let memRev=0;
+function buildAct4(){
+  const g=document.getElementById("mem-grid");g.innerHTML="";memRev=0;
+  const sh=[...MEM].sort(()=>Math.random()-.5);
+  sh.forEach((m,i)=>{
+    const d=document.createElement("div");d.className="mem-card";
+    d.innerHTML=`
+<div class="mem-card-inner mem-front"><div class="mem-emoji">${m.emoji}</div><div class="mem-qlbl">${m.lbl}</div></div>
+<div class="mem-card-inner mem-back" style="background:${m.sb}"><div class="mem-s" style="color:${m.sc}">${m.s}</div><div class="mem-sname" style="color:${m.st}">${{
+      "1S":"SEIRI","2S":"SEITON","3S":"SEISO","4S":"SEIKETSU","5S":"SHITSUKE"}[m.s]}</div></div>`;
+    d.onclick=()=>{
+      const wasFlipped=d.classList.contains("flipped");
+      d.classList.toggle("flipped");
+      if(!wasFlipped){
+        score.a4++;memRev++;
+        document.getElementById("prog-4").textContent=memRev+"/10";
+        document.getElementById("pbar-4").style.width=Math.round(memRev/10*100)+"%";
+        if(memRev===10){
+          document.getElementById("mem-status").textContent="¡Revelaste las 10! ¿Las acertaste todas?";
+          document.getElementById("mem-status").style.color="#16A34A";
+          document.getElementById("btn-next-4").disabled=false;
+        }
+      } else {score.a4--;memRev--;}
+    };
+    g.appendChild(d);
+  });
+}
+
+/* ─── RESULTADO ─── */
+const NIVELES=[
+  {min:22,label:"MAESTRO 5S",emoji:"🌟",bg:"#D97706",msg:"Conocés las 5S a fondo. Sos un referente del sistema en tu área."},
+  {min:18,label:"EXPERTO",emoji:"⭐",bg:"#2563EB",msg:"Muy bien. Dominás los conceptos y los aplicás en la práctica."},
+  {min:12,label:"AVANZADO",emoji:"✅",bg:"#16A34A",msg:"Buen nivel. Hay algunos puntos para repasar en el panel."},
+  {min:6, label:"EN PROGRESO",emoji:"🔷",bg:"#7C3AED",msg:"Seguís creciendo. Volvé a leer el panel y volvé a jugar."},
+  {min:0, label:"INICIANDO",emoji:"🔶",bg:"#DC2626",msg:"Esto es el punto de partida. Cada vuelta se aprende más."},
+];
+function showResult(){
+  const total=score.a1+score.a2+score.a3+score.a4;
+  const nivel=NIVELES.find(n=>total>=n.min);
+  document.getElementById("res-badge").textContent=nivel.emoji;
+  document.getElementById("res-badge").style.background=nivel.bg+"22";
+  document.getElementById("res-badge").style.border="2px solid "+nivel.bg;
+  document.getElementById("res-name").textContent=userName;
+  document.getElementById("res-nivel").textContent=nivel.label;
+  document.getElementById("res-nivel").style.color=nivel.bg;
+  document.getElementById("res-score").textContent=total;
+  document.getElementById("res-msg").textContent=nivel.msg;
+  const bd=document.getElementById("res-breakdown");
+  bd.innerHTML=["Correcto/Incorrecto","Unir con flechas","Encontrá defectos","Memory 5S"].map((n,i)=>{
+    const k=["a1","a2","a3","a4"][i];
+    const max=[8,5,7,10][i];
+    const c=["#2563EB","#16A34A","#D97706","#7C3AED"][i];
+    return `<div class="result-row"><span class="result-row-s" style="color:${c}">${n}</span><span class="result-row-pts">${score[k]} / ${max}</span></div>`;
+  }).join("");
+  const now=new Date();
+  const fecha=now.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const hora=now.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"});
+  document.getElementById("res-reg-rows").innerHTML=`
+    <div class="registro-row"><span class="registro-key">Nombre</span><span class="registro-val">${userName}</span></div>
+    <div class="registro-row"><span class="registro-key">Fecha</span><span class="registro-val">${fecha} ${hora}</span></div>
+    <div class="registro-row"><span class="registro-key">Puntaje</span><span class="registro-val">${total}/26</span></div>
+    <div class="registro-row"><span class="registro-key">Nivel</span><span class="registro-val">${nivel.label}</span></div>`;
+  goScreen("s-result");
+}
+function reiniciar(){
+  score={a1:0,a2:0,a3:0,a4:0};
+  document.getElementById("nombre-input").value="";
+  document.getElementById("btn-start").disabled=true;
+  goScreen("s-welcome");
+}
+</script>
+</body>
+</html>
